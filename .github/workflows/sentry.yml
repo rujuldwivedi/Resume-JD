@@ -9,7 +9,7 @@ on:
   # Runs on a schedule (every 5 minutes)
   # NOTE: The shortest interval GitHub guarantees is 5 minutes.
   schedule:
-    - cron: "*/5 * * * *"
+  - cron: '0 0 * * *' # Runs at 00:00 UTC every day
 
 jobs:
   build-and-send:
