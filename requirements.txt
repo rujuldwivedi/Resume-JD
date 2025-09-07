@@ -1,0 +1,4 @@
+# requirements.txt
+google-generativeai
+pylatexenc
+python-dotenv

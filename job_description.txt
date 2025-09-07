@@ -1,0 +1,36 @@
+Role Overview
+
+We are looking for a Backend Developer to design and implement scalable, high-performance APIs and business logic. You will work closely with product and engineering teams to build reliable backend services, automate operations, and integrate with external systems.
+
+
+Responsibilities
+
+Build and maintain backend services using Python, Django, and DRF
+Design and manage databases in PostgreSQL
+Optimize performance with Redis caching
+Deploy and manage services on AWS (Amplify, EC2, S3) using Boto3
+Design, integrate, and document RESTful APIs
+Write unit and integration test cases to ensure code quality
+
+
+Requirements
+
+Proficiency in Python/Django/DRF, PostgreSQL, Redis, AWS
+Experience with RESTful APIs and Git
+Strong debugging and problem-solving skills
+Self-driven with ownership mindset
+
+
+Good to Have
+
+Exposure to Temporal or workflow orchestration tools
+Understanding of Model Context Protocol (MCP)
+Experience integrating LLMs/AI into backend services
+
+
+Why Join Us
+
+Work directly with founders and tech leads in a high-impact role
+Fast-paced environment with ownership and creative freedom
+Backend ownership: APIs, services, and data layers
+Learn how 0→1 products are built, scaled, and loved

@@ -1,0 +1,100 @@
+# .github/workflows/sentry.yml
+
+name: Resume Sentry Workflow
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Runs on a schedule (every 5 minutes)
+  # NOTE: The shortest interval GitHub guarantees is 5 minutes.
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+  build-and-send:
+    runs-on: ubuntu-latest
+
+    # Grant permissions for the job to write back to the repo (to update the hash)
+    permissions:
+      contents: write
+
+    steps:
+      - name: 1. Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 2. Calculate current JD hash
+        id: new_hash
+        run: echo "hash=$(sha256sum job_description.txt | awk '{print $1}')" >> $GITHUB_OUTPUT
+
+      - name: 3. Read previous JD hash
+        id: old_hash
+        # This step can fail if the file doesn't exist on the first run, so we allow it
+        continue-on-error: true
+        run: echo "hash=$(cat jd_hash.txt)" >> $GITHUB_OUTPUT
+
+      - name: 4. Compare hashes and decide to run
+        id: check_hashes
+        if: steps.new_hash.outputs.hash != steps.old_hash.outputs.hash
+        run: echo "JD has changed. Proceeding with the build."
+
+      # The following steps will ONLY run if the 'check_hashes' step ran successfully
+      - name: 5. Set up Python
+        if: steps.check_hashes.conclusion == 'success'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 6. Install TeX Live
+        if: steps.check_hashes.conclusion == 'success'
+        # This is the longest step, can take 5-10 minutes
+        run: |
+          echo "Installing TeX Live. This will take some time..."
+          sudo apt-get update
+          sudo apt-get install -y texlive-full
+
+      - name: 7. Install Python dependencies
+        if: steps.check_hashes.conclusion == 'success'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 8. Run the AI Resume Tailor
+        if: steps.check_hashes.conclusion == 'success'
+        id: run_script
+        # We provide the API key as an environment variable
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: python main.py
+
+      - name: 9. Send email with PDF attachment
+        if: steps.check_hashes.conclusion == 'success'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com # Or your email provider's SMTP server
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "✅ Your Tailored Resume for ${{ fromJSON(steps.run_script.outputs.final_name_info).company_name }} is Ready!"
+          body: |
+            Hello Rujul,
+
+            The Resume Sentry has detected a new job description and generated a tailored resume for you.
+
+            Repository: ${{ github.repository }}
+            Commit: ${{ github.sha }}
+
+            The tailored PDF is attached to this email. Good luck with the application!
+          to: ${{ secrets.MAIL_TO }}
+          from: Resume Sentry Bot
+          attachments: ${{ steps.run_script.outputs.pdf_path }}
+
+      - name: 10. Update the hash file in the repository
+        if: steps.check_hashes.conclusion == 'success'
+        run: |
+          echo -n "${{ steps.new_hash.outputs.hash }}" > jd_hash.txt
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add jd_hash.txt
+          git commit -m "chore: Update JD hash to ${{ steps.new_hash.outputs.hash }}"
+          git push

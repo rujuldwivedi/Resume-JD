@@ -1,0 +1,20 @@
+# .gitignore
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Output files
+output/
+*.pdf
+*.log
+*.aux
+*.out
+Rujul_Dwivede_Resume_*.tex
+
+# IDE files
+.vscode/
+.idea/
